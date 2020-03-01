@@ -1,6 +1,7 @@
 <template>
   <div id="app"  >
       <drag-drop></drag-drop>
+      <drag-drop></drag-drop>
   </div>
 </template>
 

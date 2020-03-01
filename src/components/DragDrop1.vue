@@ -9,7 +9,7 @@
                         @dragover="allowDrop"
                         @click="play(audio)"
                         v-for="audio in sounds" :key=audio.id
-                        :id="audio.id+20"
+                        :id="audio.id"
                 >
                 </div>
             </b-row>
@@ -24,11 +24,12 @@
                     <img
                             @dragstart="dragStart"
                             draggable="true"
-                            :id="pic.id"
+                            :id="pic.id+7*uid"
                             :src=pic.src
                     >
                 </div>
             </b-row>
+
             <b-row style="margin-top: 50px">
                 <b-col cols="2">
                     <strong><h4>Correct : {{this.correct}}</h4></strong>
@@ -41,18 +42,20 @@
 </template>
 
 <script>
+    let uid = 0
     export default {
         name: "DragDrop1",
         data(){
+            uid += 1
             return{
                 correct:0,
                 wrong:0,
                 current:{},
                 player: new Audio(),
+                uid: uid
             }
         },
         methods:{
-
             play(clickedAudio){
                 this.current=clickedAudio;
                 this.player.src=this.current.src;
@@ -60,18 +63,22 @@
             },
             dragStart(event){
                 event.dataTransfer.setData("data", event.target.id);
+                event.dataTransfer.setData("componentId", this.uid);
             },
             allowDrop(event) {
-                event.preventDefault();
+                    event.preventDefault();
             },
             drop(event) {
                 event.preventDefault();
-                var dragId = event.dataTransfer.getData("data");
-                const dragItem=this.pics.find(pic=>pic.id==dragId);
-                dragItem.divId=event.target.id;
+                var compId=event.dataTransfer.getData("componentId")
 
-                if(event.target.childElementCount==0 && event.target.toString()=="[object HTMLDivElement]" )
+                var dragId = event.dataTransfer.getData("data");
+                const dragItem=this.pics.find(pic=>pic.id==dragId%7);
+
+                if(compId==this.uid && event.target.childElementCount==0 && event.target.toString()=="[object HTMLDivElement]" ) {
+                    dragItem.divId = event.target.id;
                     event.target.appendChild(document.getElementById(dragId));
+                }
 
                 this.check();
             },
@@ -80,9 +87,9 @@
                 this.wrong=0
 
                 this.pics.forEach(pic=>{
-                    if (pic.id+20==pic.divId)
+                    if (pic.id==pic.divId)
                         this.correct++
-                    else if (pic.divId!=0 && pic.divId!="" && pic.id+20!=pic.divId )
+                    else if (pic.divId!=0 && pic.divId!="" && pic.id!=pic.divId )
                         this.wrong++
                 })
 
@@ -93,7 +100,7 @@
                 return this.$store.state.sounds;
             },
             pics(){
-                return this.$store.state.pics;
+                return JSON.parse(JSON.stringify(this.$store.state.pics));
             }
         }
     }
